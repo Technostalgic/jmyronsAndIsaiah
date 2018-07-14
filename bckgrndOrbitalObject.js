@@ -10,7 +10,10 @@ jmyrons.htmlRenderer = function(sceneObjs) {
       document.body.appendChild(elemObj);
     }
     let location = sceneObjs[i].getLocation();
-    elemObj.setAttribute("style", "background-color:" + sceneObjs[i].cfg.color + "; top:" + location.y + "px; left:" + location.x + "px;")
+    elemObj.style.backgroundColor = sceneObjs[i].cfg.color;
+    elemObj.style.top = location.y + "px"; 
+    elemObj.style.left = location.x + "px";
+    elemObj.style.zOrder = sceneObjs[i].cfg.z;
   }
 }
 
