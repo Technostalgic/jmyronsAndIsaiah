@@ -1,0 +1,187 @@
+<html>
+  <head>
+    <link rel="icon" href="data:,">
+    <style>
+    .ui {
+      margin: 3px;
+      padding:3px;
+      background-color: #EEEEEE;
+    }
+    .orbiter {
+      width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      background-color: #0000FF;
+      position: fixed;
+      opacity: 0.5;
+    }
+    </style>
+  </head>
+  <body onload="pageNs.funcs.onPageLoad();">
+    <div class="ui">
+      Animate: Frames/second: <input id="fps"></input>
+      <input type="button" id="updateFps" value="Update" onclick="pageNs.funcs.updateFps();"></input>
+      <input type="button" id="animationToggle" value="Start" onclick="pageNs.funcs.toggleAnimation();"></input> 
+    </div>
+    <div class="ui">
+      Orbital Object Configuration Data:
+      <table id="orbitData">
+        <tr><th>Radius</th><th>Period (s)</th><th>Color</th><th>X Offset from origin</th><th>Y Offset from origin</th><th></th><th>Total Objects</th></tr>
+        <tr><td><input id="ooc.radius"></input></td>
+        <td><input id="ooc.period"></td>
+        <td><input id="ooc.color"></td>
+        <td><input id="ooc.offset.x"></td>
+        <td><input id="ooc.offset.y"></td>
+        <td><input type="button" value="Create" onclick="pageNs.funcs.getOrbitalObjParamsCreateNewObject();"></td>
+        <td><div style="text-align:right;" id="objectCnt"></div></td></tr>
+      </table>
+    </div>
+    <script src="../scripts/bckgrndOrbitalObject.js"></script>
+    <script>
+      var pageNs = pageNs || {vars:{}, funcs:{}}; //global namespace object
+      pageNs.funcs.onPageLoad = function() {
+        pageNs.vars.startTimeMillis = (new Date()).getTime();
+        pageNs.vars.timerId = null;
+        pageNs.vars.renderer = jmyrons.htmlRenderer;
+        pageNs.vars.orbOjbCfg = {fps:60, color:"0000FF", orbit:{radius:250, period:5, offset:{x:300,y:300}}};
+        pageNs.vars.running = false;
+        pageNs.vars.fps = 60;
+        let ooc = pageNs.vars.orbOjbCfg;
+        pageNs.vars.soObjCfg = [];
+        pageNs.vars.animatedObjects = [];
+
+        document.getElementById("fps").value = pageNs.vars.fps;
+
+        document.getElementById("ooc.color").value = ooc.color;
+        document.getElementById("ooc.radius").value = ooc.orbit.radius;
+        document.getElementById("ooc.period").value = ooc.orbit.period;
+        document.getElementById("ooc.offset.x").value = ooc.orbit.offset.x;
+        document.getElementById("ooc.offset.y").value = ooc.orbit.offset.y;
+      }
+
+      pageNs.funcs.onRendererChanged = function(newRenderer) {
+        pageNs.funcs.changeRenderer(newRenderer);
+      }
+
+      pageNs.funcs.changeRenderer = function(newRenderer) {
+        let i;
+        let elem;
+        if (pageNs.vars.running && pageNs.vars.renderer != newRenderer) {
+          pageNs.vars.renderer = newRenderer;  
+          clearInterval(pageNs.vars.timerId);
+          if (newRenderer === jmyrons.canvasRenderer) {
+            // clear the objects from the screen
+            for (i = 0; i < pageNs.vars.animatedObjects.length; i++) {
+              let elem = document.getElementById("orbiter"+i);
+              elem.parentNode.removeChild(elem);
+            }
+            pageNs.vars.timerId = setInterval(pageNs.funcs.canvasAnimationLoop, 1000 / pageNs.vars.fps);
+          }
+          else if (newRenderer === jmyrons.htmlRenderer) {
+            //clear the objects from the screen
+            elem = document.getElementById("canvasId");
+            elem.parentNode.removeChild(elem);
+            pageNs.vars.timerId = setInterval(pageNs.funcs.htmlAnimationLoop, 1000 / pageNs.vars.fps);
+          }
+        }
+        else if (pageNs.vars.renderer != newRenderer) {
+          pageNs.vars.renderer = newRenderer;
+          if (newRenderer === jmyrons.canvasRenderer) {
+            // clear the objects from the screen
+            for (i = 0; i < pageNs.vars.animatedObjects.length; i++) {
+              elem = document.getElementById("orbiter" + i);
+              if (elem) {
+                elem.parentNode.removeChild(elem);
+              }
+            }
+            jmyrons.canvasRenderer(pageNs.vars.animatedObjects);
+          }
+          else if (newRenderer === jmyrons.htmlRenderer) {
+            //clear the objects from the screen
+            let elem = document.getElementById("canvasId");
+            elem.parentNode.removeChild(elem);
+            jmyrons.htmlRenderer(pageNs.vars.animatedObjects);
+          }
+        }
+      }
+
+      pageNs.funcs.clearRenderer = function(newRenderer) {
+        if (pageNs.vars.renderer != newRenderer) {
+          jmyrons.clearRenderer(pageNs.vars.renderer);
+          pageNs.vars.renderer = newRenderer;
+        }
+      }
+
+      pageNs.funcs.updateFps = function() {
+        pageNs.vars.fps = parseInt(document.getElementById("fps").value);
+        if (pageNs.vars.fps === NaN || pageNs.vars.fps < 1 || pageNs.vars.fps > 90) {
+          alert("(frames/second) must be a number between 1 and 90");
+          return;
+        }
+        for (let i = 0; i < pageNs.vars.animatedObjects.length; i++) {
+          pageNs.vars.animatedObjects[i].setFps(pageNs.vars.fps);
+        }
+        if (pageNs.vars.timerId !== null) {
+          clearInterval(pageNs.vars.timerId);
+          if (pageNs.vars.renderer === jmyrons.htmlRenderer) {           
+            pageNs.vars.timerId = setInterval(pageNs.funcs.htmlAnimationLoop, 1000 / pageNs.vars.fps);
+          }
+          else if (pageNs.vars.renderer === jmyrons.canvasRenderer) {
+            pageNs.vars.timerId = setInterval(pageNs.funcs.canvasAnimationLoop, 1000 / pageNs.vars.fps);
+          }
+        }
+      }
+
+      pageNs.funcs.toggleAnimation = function() {
+        pageNs.vars.running = !pageNs.vars.running;
+        if (pageNs.vars.running && pageNs.vars.timerId === null) {
+          document.getElementById("animationToggle").value = "Stop";
+          if (pageNs.vars.renderer === jmyrons.htmlRenderer) {           
+            pageNs.vars.timerId = setInterval(pageNs.funcs.htmlAnimationLoop, 1000 / pageNs.vars.fps);
+          }
+          else if (pageNs.vars.renderer === jmyrons.canvasRenderer) {
+            pageNs.vars.timerId = setInterval(pageNs.funcs.canvasAnimationLoop, 1000 / pageNs.vars.fps);
+          }
+        }
+        else if (pageNs.vars.timerId !== null) {
+          document.getElementById("animationToggle").value = "Start";
+          clearInterval(pageNs.vars.timerId);
+          pageNs.vars.timerId = null;
+        }
+      }
+
+      pageNs.funcs.htmlAnimationLoop = function() {
+        jmyrons.htmlRenderer(pageNs.vars.animatedObjects);
+      }
+
+      pageNs.funcs.canvasAnimationLoop = function() {
+        jmyrons.canvasRenderer(pageNs.vars.animatedObjects);
+      }
+
+      pageNs.funcs.getOrbitalObjParamsCreateNewObject = function() {
+        let ooc = {orbit:{offset:{}}, renderer:jmyrons.htmlRenderer};
+        ooc.id = "orbiter" + pageNs.vars.animatedObjects.length;
+        ooc.fps = pageNs.vars.fps;
+        ooc.color = document.getElementById("ooc.color").value;
+
+        // provide a way of fixing a starting point as some offset angle for each orbiter object when they are initially
+        // created so they don't all coalesce to a comon starting angle when the fps value is updated and the locations arrays
+        // ar all resized and their values recomputed (these offsets prevent the coalescing of the values to a common start angle).
+        // I use the constant 200 to get 200 different potential angle offsets ranging between 0..2PI
+        let milis = (new Date()).getTime() - pageNs.vars.startTimeMillis;
+        ooc.startAngle = (((milis % 200)/200.0) * 2 * Math.PI);
+
+        ooc.orbit.radius = document.getElementById("ooc.radius").value;
+        ooc.orbit.period = document.getElementById("ooc.period").value;
+        ooc.orbit.offset.x = document.getElementById("ooc.offset.x").value;
+        ooc.orbit.offset.y = document.getElementById("ooc.offset.y").value;
+        let obj = new jmyrons.BckgrndOrbitalObject(ooc);
+        if (obj.cfg) { // the object was created
+          pageNs.vars.animatedObjects.push(obj);
+          document.getElementById("objectCnt").innerHTML = "" + pageNs.vars.animatedObjects.length;
+        }
+      }
+    </script>
+  </body>
+
+</html>
