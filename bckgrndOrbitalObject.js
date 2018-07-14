@@ -10,7 +10,7 @@ jmyrons.htmlRenderer = function(sceneObjs) {
       document.body.appendChild(elemObj);
     }
     let location = sceneObjs[i].getLocation();
-    elemObj.setAttribute("style", "background-color:#" + sceneObjs[i].cfg.color + "; top:" + location.y + "px; left:" + location.x + "px;")
+    elemObj.setAttribute("style", "background-color:" + sceneObjs[i].cfg.color + "; top:" + location.y + "px; left:" + location.x + "px;")
   }
 }
 
@@ -22,10 +22,10 @@ jmyrons.BckgrndOrbitalObject = function(cfg) {
     alert("cfg.orbit.radius must be a number between 10 and 1000");
     return;
   }
-  if (cfg.color < 0x0 || cfg.color > 0xFFFFFF ) {
-    alert("cfg.color must be a hex number between 0 and FFFFFF");
-    return;
-  }
+  //if (cfg.color < 0x0 || cfg.color > 0xFFFFFF ) {
+  //  alert("cfg.color must be a hex number between 0 and FFFFFF");
+  //  return;
+  //}
   if (typeof cfg.orbit.period === "string") { 
     cfg.orbit.period = parseInt(cfg.orbit.period);
   }
@@ -56,7 +56,6 @@ jmyrons.BckgrndOrbitalObject = function(cfg) {
   }
   
   var moon = function() {
-    let timerId = null;
     let milisecsPerFrame = 1000 / cfg.orbit.fps;
     let curRenderIndex = 0;
     let locations = null;

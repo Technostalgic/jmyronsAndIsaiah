@@ -8,6 +8,7 @@
       background-color: #EEEEEE;
     }
     .orbiter {
+      box-shadow:10px 10px 10px 2px #DDDDDD;
       width: 20px;
       height: 20px;
       border-radius: 10px;
@@ -46,17 +47,40 @@
         pageNs.vars.orbOjbCfg = {fps:60, color:"0000FF", orbit:{radius:250, period:5, offset:{x:300,y:300}}};
         pageNs.vars.running = false;
         pageNs.vars.fps = 60;
-        let ooc = pageNs.vars.orbOjbCfg;
-        pageNs.vars.soObjCfg = [];
         pageNs.vars.animatedObjects = [];
-
+        pageNs.vars.soObjCfg = [
+        //  {color:"0000FF", orbit:{radius:250, period:5, offset:{x:300,y:300}}},
+        //  {color:"00FF00", orbit:{radius:350, period:6, offset:{x:400,y:300}}},
+        //  {color:"FF0000", orbit:{radius:150, period:10, offset:{x:300,y:400}}},
+        ];
+        for (let i = 0; i < 200; i++) {
+          let rRadius = Math.floor(10 + Math.random() * 500);
+          let rRed = Math.floor(Math.random() * 256); 
+          let rGreen = Math.floor(Math.random() * 256); 
+          let rBlue = Math.floor(Math.random() * 256);
+          let rColor = "rgb("+rRed+","+rGreen+","+rBlue+")";
+          let rPeriod = Math.floor(7 + Math.random() * 5);
+          let rX = Math.floor(Math.random() * 1000);
+          let rY = Math.floor(Math.random() * 1000);
+          pageNs.vars.soObjCfg[i] = {};
+          pageNs.vars.soObjCfg[i].id = "orb" + i;
+          pageNs.vars.soObjCfg[i].fps = 60;
+          pageNs.vars.soObjCfg[i].startAngle = Math.random() * 2 * Math.PI;
+          pageNs.vars.soObjCfg[i].color = rColor; 
+          pageNs.vars.soObjCfg[i].renderer = jmyrons.htmlRenderer;
+          pageNs.vars.soObjCfg[i].orbit = {radius:rRadius, period:rPeriod, offset:{}};
+          pageNs.vars.soObjCfg[i].orbit.offset.x = rX;
+          pageNs.vars.soObjCfg[i].orbit.offset.y = rY;
+          pageNs.vars.animatedObjects.push(new jmyrons.BckgrndOrbitalObject(pageNs.vars.soObjCfg[i]));
+        }
+        let ooc = pageNs.vars.soObjCfg[0];
         document.getElementById("fps").value = pageNs.vars.fps;
-
         document.getElementById("ooc.color").value = ooc.color;
         document.getElementById("ooc.radius").value = ooc.orbit.radius;
         document.getElementById("ooc.period").value = ooc.orbit.period;
         document.getElementById("ooc.offset.x").value = ooc.orbit.offset.x;
         document.getElementById("ooc.offset.y").value = ooc.orbit.offset.y;
+        pageNs.funcs.toggleAnimation();
       }
 
       pageNs.funcs.onRendererChanged = function(newRenderer) {
