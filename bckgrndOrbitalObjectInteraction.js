@@ -7,13 +7,16 @@
 
 // the orbiter objects that are being tracked
 var trackedOrbiters = [];
+var nextUID = 0;
 
+function getNextUID(){
+    nextUID++;
+    return nextUID;
+}
 function findOrbiterObjFromElement(element){
-    return trackedOrbiters[0];
     for(let orbiter of trackedOrbiters)
-        if(orbiter.element.style.left == element.style.left)
-            if(orbiter.element.style.top == element.style.top)
-                return orbiter;
+        if(element.getAttribute("orbiteruid") == orbiter.UID)
+            return orbiter;
 }
 
 function trackOrbiter(orbiterElement){
@@ -21,12 +24,16 @@ function trackOrbiter(orbiterElement){
     orbiterElement.addEventListener("mouseenter", listener_mouseEnterOrbiter);
     orbiterElement.addEventListener("mouseout", listener_mouseOutOrbiter);
     
+    let uid = getNextUID();
+    orbiterElement.setAttribute("orbiteruid", uid.toString());
+
     // creates an object out of the orbiter element
     let orbiterObj = {
         element: orbiterElement,
         time_mouseEnter: 0,
         time_mouseOut: 0,
-        animMode: 0
+        animMode: 0,
+        UID: uid
     };
     trackedOrbiters.push(orbiterObj);
 }
@@ -78,13 +85,13 @@ function listener_addElement(e){
 }
 
 function listener_mouseEnterOrbiter(e){
-    let orbiter = findOrbiterObjFromElement(e);
+    let orbiter = findOrbiterObjFromElement(e.target);
 
     orbiter.time_mouseEnter = performance.now();
     orbiter.animMode = 1;
 }
 function listener_mouseOutOrbiter(e){
-    let orbiter = findOrbiterObjFromElement(e);
+    let orbiter = findOrbiterObjFromElement(e.target);
 
     orbiter.time_mouseOut = performance.now();
     orbiter.animMode = 0;
@@ -92,6 +99,6 @@ function listener_mouseOutOrbiter(e){
 
 window.addEventListener("load", function(){
     init_mouseHandlers();
-    setInterval(updateAllOrbiterAnims, 10);
+    setInterval(updateAllOrbiterAnims, 16);
     console.log("LOADED");
 });
